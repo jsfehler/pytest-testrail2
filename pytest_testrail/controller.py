@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Optional
+from typing import List, Optional
 
 from .logger import get_logger
 from .results import Results
@@ -77,7 +77,7 @@ class _TestRailController:
         assign_user_id: int,
         project_id: int,
         suite_id: int,
-        tr_keys: list[int],
+        tr_keys: List[int],
         milestone_id: Optional[int] = None,
         description: str = '',
     ) -> int:
@@ -114,14 +114,14 @@ class _TestRailController:
 
         return testrun_id
 
-    def get_blocked_cases(self, testrun_id: int) -> list[Optional[int]]:
-        rv: list[Optional[int]] = []
+    def get_blocked_cases(self, testrun_id: int) -> List[Optional[int]]:
+        rv: List[Optional[int]] = []
 
         response: dict = self.client.get_tests(run_id=testrun_id).get().json()
 
         self.client.validate_response(response)
 
-        tests: list[dict] = response['tests']
+        tests: List[dict] = response['tests']
 
         if tests:
             rv = [

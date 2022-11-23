@@ -1,6 +1,7 @@
 from collections import UserList
 from itertools import groupby
 from operator import attrgetter
+from typing import List
 
 from .result_item import ResultItem
 
@@ -12,10 +13,10 @@ class Results(UserList):
         """Mimic default list behaviour."""
         self.data.append(item)
 
-    def _sort(self) -> list[ResultItem]:
+    def _sort(self) -> List[ResultItem]:
         """Sort Pytest results to make sense for TestRail."""
         # Every result, split by test_name
-        all_split_by_test_name: list[list[ResultItem]] = []
+        all_split_by_test_name: List[List[ResultItem]] = []
 
         # First: Sort and split results by case_id
         results = sorted(self.data, key=attrgetter('case_id'))
@@ -23,7 +24,7 @@ class Results(UserList):
 
         # For each case_id:
         for _case_id, cases_by_id in case_ids:
-            _cases_list: list[ResultItem] = list(cases_by_id)
+            _cases_list: List[ResultItem] = list(cases_by_id)
 
             # Second: Sort and split each case_id group by:
             #     test_name, secondary sort by timestamp
@@ -47,7 +48,7 @@ class Results(UserList):
         all_split_by_test_name.sort(key=lambda x: x[-1].testrail_status_id)
 
         # Fifth: Flatten list to send to TestRail
-        sorted_results: list[ResultItem] = []
+        sorted_results: List[ResultItem] = []
         for itemlist in all_split_by_test_name:
             for item in itemlist:
                 sorted_results.append(item)

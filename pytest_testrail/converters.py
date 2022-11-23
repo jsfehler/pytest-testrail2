@@ -1,8 +1,8 @@
 import re
-from typing import Any, Union
+from typing import Any, List, Tuple, Union
 
 
-def clean_test_ids(test_ids: Union[tuple[str], Any]) -> list[int]:
+def clean_test_ids(test_ids: Union[Tuple[str], Any]) -> List[int]:
     """Clean pytest marker containing testrail testcase ids.
 
     Attributes:
@@ -24,7 +24,7 @@ def clean_test_ids(test_ids: Union[tuple[str], Any]) -> list[int]:
     return rv
 
 
-def clean_test_defects(defect_ids: Union[tuple[str], Any]) -> list[str]:
+def clean_test_defects(defect_ids: Union[Tuple[str], Any]) -> List[str]:
     """Clean pytest marker containing testrail defects ids.
 
     Attributes:

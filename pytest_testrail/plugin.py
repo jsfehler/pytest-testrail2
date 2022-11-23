@@ -2,7 +2,7 @@ import json
 import logging
 import os
 import time
-from typing import Generator, Optional, cast
+from typing import Generator, List, Optional, Tuple, cast
 
 from _pytest.config.argparsing import OptionGroup, Parser
 
@@ -21,8 +21,8 @@ from .testrail_api_client import _TestRailAPI
 
 
 def get_testrail_keys(
-    items: list[pytest.Function],
-) -> list[tuple[pytest.Function, list[int]]]:
+    items: List[pytest.Function],
+) -> List[Tuple[pytest.Function, List[int]]]:
     """Get Pytest nodes and TestRail ids from pytests markers.
 
     Returns:
@@ -34,8 +34,9 @@ def get_testrail_keys(
         closest_marker: Optional[pytest.Mark]
 
         marker = 'case_id'
-        if closest_marker := item.get_closest_marker(marker):
-            raw_ids = cast(tuple[str], closest_marker.args)
+        closest_marker = item.get_closest_marker(marker)
+        if closest_marker:
+            raw_ids = cast(Tuple[str], closest_marker.args)
             cleaned_ids = clean_test_ids(raw_ids)
             testcaseids.append((item, cleaned_ids))
 

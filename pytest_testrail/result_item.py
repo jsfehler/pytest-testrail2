@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Optional
+from typing import List, Optional
 
 from .status import PYTEST_TO_TESTRAIL_STATUS
 
@@ -25,7 +25,7 @@ class ResultItem:
     duration: float
     comment: Optional[str]
     defects: Optional[str]
-    test_parametrize: Optional[list[str]]
+    test_parametrize: Optional[List[str]]
     timestamp: float
 
     @property

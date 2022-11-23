@@ -1,5 +1,5 @@
 import base64
-from typing import Optional, Union
+from typing import Optional, Tuple, Union
 
 import inori
 
@@ -23,7 +23,7 @@ class _TestRailAPI(inori.Client):
         base_url: str,
         user: str,
         password: str,
-        timeout: Optional[Union[float, tuple[float, float]]] = 30,
+        timeout: Optional[Union[float, Tuple[float, float]]] = 30,
     ):
         super().__init__(f'{base_url}/index.php?/api/v2/')
 
