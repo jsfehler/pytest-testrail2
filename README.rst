@@ -23,10 +23,12 @@ This project preserves the functionality of the deprecated `pytest-testrail <htt
    :target: https://github.com/jsfehler/pytest-testrail2/actions/workflows/main.yml
    :alt: Build status
 
- Key features:
- - Configurable: Handle results in whichever way makes sense for your project.
- - Powerful: Handle complex use cases via a simple interface to the TestRail API.
- - Flexible: Fully compatible with pytest.parametrize(), pytest-xdist, and pytest-rerunfailures.
+
+Key features:
+
+- Configurable: Handle results in whichever way makes sense for your project.
+- Powerful: Handle complex use cases via a simple interface to the TestRail API.
+- Flexible: Fully compatible with pytest.parametrize(), pytest-xdist, and pytest-rerunfailures.
 
 Example
 =======
