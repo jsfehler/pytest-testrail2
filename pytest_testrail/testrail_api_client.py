@@ -1,4 +1,3 @@
-import base64
 from typing import Optional, Tuple, Union
 
 import inori
@@ -21,24 +20,14 @@ class _TestRailAPI(inori.Client):
     def __init__(
         self,
         base_url: str,
-        user: str,
-        password: str,
+        auth=None,
         timeout: Optional[Union[float, Tuple[float, float]]] = 30,
     ):
-        super().__init__(f'{base_url}/index.php?/api/v2/')
-
-        self.user = user
-        self.password = password
+        super().__init__(f'{base_url}/index.php?/api/v2/', auth)
 
         self.timeout = timeout
 
-        auth_as_bytes = base64.b64encode(
-            bytes(f'{self.user}:{self.password}', 'utf-8'),
-        )
-        auth = str(auth_as_bytes, 'ascii').strip()
-
         self.headers['Content-Type'] = 'application/json'
-        self.headers['Authorization'] = f'Basic {auth}'
 
     def validate_response(self, response: dict, strict: bool = False) -> None:
         """Get the error response from the TestRail API response.

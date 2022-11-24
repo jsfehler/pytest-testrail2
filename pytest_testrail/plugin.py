@@ -475,8 +475,10 @@ def pytest_configure(config: Config) -> None:  # noqa D103
 
         client = _TestRailAPI(
             base_url=cast(str, config_manager.get('--tr-url', 'tr_url')),
-            user=cast(str, config_manager.get('--tr-email', 'tr_email')),
-            password=cast(str, config_manager.get('--tr-password', 'tr_password')),
+            auth=(
+                cast(str, config_manager.get('--tr-email', 'tr_email')),
+                cast(str, config_manager.get('--tr-password', 'tr_password')),
+            ),
             timeout=timeout,
         )
 

@@ -20,7 +20,7 @@ setup(
     install_requires=[
         'pytest>=7.2.0,<8.0',
         'requests>=2.20.0,<3.0',
-        'inori>=0.0.7,<1.0',
+        'inori>=0.0.8,<1.0',
         'filelock>=3.6.0,<4.0',
     ],
     include_package_data=True,
