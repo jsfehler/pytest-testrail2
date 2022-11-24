@@ -1,4 +1,4 @@
-from typing import Optional, Tuple, Union
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 import inori
 
@@ -29,7 +29,11 @@ class _TestRailAPI(inori.Client):
 
         self.headers['Content-Type'] = 'application/json'
 
-    def validate_response(self, response: dict, strict: bool = False) -> None:
+    def validate_response(
+        self,
+        response: Union[List[Any], Dict[str, Any]],
+        strict: bool = False,
+    ) -> None:
         """Get the error response from the TestRail API response.
 
         Arguments:
@@ -38,9 +42,12 @@ class _TestRailAPI(inori.Client):
         Returns:
             Union[None, str]: None or the error message.
         """
-        error: Optional[str] = response.get('error', None)
-        if error:
-            self.logger.error(f'{error}')
+        # Response from TestRail may be a list.
+        # If a list, it won't have an error.
+        if isinstance(response, dict):
+            error: Optional[str] = response.get('error', None)
+            if error:
+                self.logger.error(f'{error}')
 
-            if strict:
-                raise Exception(error)
+                if strict:
+                    raise Exception(error)
