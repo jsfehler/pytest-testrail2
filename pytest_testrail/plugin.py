@@ -108,6 +108,32 @@ class PyTestRailPlugin:
         """Add plugin info to header."""
         return self.report_header()
 
+    def set_current_testrun_id(self, config: Config, tr_keys: list[int]) -> None:
+        """Get the current testrun's ID or create a new testrun to get an ID."""
+        # Guard against creating multiple testruns when using xdist
+        file_path = config.invocation_params.dir / 'pytest_testrail.json'
+
+        run_id: int
+
+        with FileLock(f'{file_path}.lock'):
+            if file_path.is_file():
+                run_id = json.loads(file_path.read_text())['run_id']
+
+            else:
+                run_id = self.controller.create_run(
+                    assign_user_id=self.assign_user_id,
+                    project_id=self.project_id,
+                    suite_id=self.suite_id,
+                    tr_keys=tr_keys,
+                    milestone_id=self.milestone_id,
+                    description=self.testrun_description,
+                )
+
+                file_path.write_text(json.dumps({"run_id": run_id}))
+
+            self.testrun_id = run_id
+            self.controller.testrun_id = run_id
+
     @pytest.hookimpl(trylast=True)
     def pytest_collection_modifyitems(self, session, config, items) -> None:
         """Create testrail test run."""
@@ -140,27 +166,7 @@ class PyTestRailPlugin:
 
         # No testplan_id, no testrun_id
         else:
-            # Guard against creating multiple testruns when using xdist
-            file_path = config.invocation_params.dir / 'pytest_testrail.json'
-
-            with FileLock(f'{file_path}.lock'):
-                if file_path.is_file():
-                    self.testrun_id = json.loads(file_path.read_text())['run_id']
-
-                else:
-                    result = self.controller.create_run(
-                        assign_user_id=self.assign_user_id,
-                        project_id=self.project_id,
-                        suite_id=self.suite_id,
-                        tr_keys=tr_keys,
-                        milestone_id=self.milestone_id,
-                        description=self.testrun_description,
-                    )
-
-                    self.testrun_id = result
-                    self.controller.testrun_id = result
-
-                    file_path.write_text(json.dumps({"run_id": self.testrun_id}))
+            self.set_current_testrun_id(config, tr_keys)
 
     @pytest.hookimpl(tryfirst=True, hookwrapper=True)
     def pytest_runtest_makereport(
