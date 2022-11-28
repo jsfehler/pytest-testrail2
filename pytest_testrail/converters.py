@@ -1,5 +1,5 @@
 import re
-from typing import Any, List, Tuple, Union
+from typing import Any, List, Optional, Tuple, Union
 
 
 def clean_test_ids(test_ids: Union[Tuple[str], Any]) -> List[int]:
@@ -18,8 +18,9 @@ def clean_test_ids(test_ids: Union[Tuple[str], Any]) -> List[int]:
     for test_id in test_ids:
         match = re.search(pattern, test_id)
         if match:
-            clean_test_id: str = match.groupdict().get('test_id')
-            rv.append(int(clean_test_id))
+            clean_test_id: Optional[str] = match.groupdict().get('test_id')
+            if clean_test_id:
+                rv.append(int(clean_test_id))
 
     return rv
 
@@ -40,7 +41,8 @@ def clean_test_defects(defect_ids: Union[Tuple[str], Any]) -> List[str]:
     for defect_id in defect_ids:
         match = re.search(pattern, defect_id)
         if match:
-            clean_defect_id: str = match.groupdict().get('defect_id')
-            rv.append(clean_defect_id)
+            clean_defect_id: Optional[str] = match.groupdict().get('defect_id')
+            if clean_defect_id:
+                rv.append(clean_defect_id)
 
     return rv
