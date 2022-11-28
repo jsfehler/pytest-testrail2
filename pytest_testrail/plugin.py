@@ -215,22 +215,18 @@ class PyTestRailPlugin:
 
                     self.results.append(data)
 
-    def pytest_testnodedown(self, node, error):
-        """When using pytest-xdist, upload results after each node goes down."""
-        if self.results:
-            self.controller.upload_results_to_testrail(self.results)
-
     def pytest_sessionfinish(self, session, exitstatus) -> None:
         """Publish results in TestRail."""
         xdist_worker = os.getenv('PYTEST_XDIST_WORKER')
         xdist_worker_count: Optional[str] = os.getenv('PYTEST_XDIST_WORKER_COUNT')
 
+        if self.results:
+            self.controller.upload_results_to_testrail(self.results)
+
         # pytest-xdist not installed or master session finished
         if not xdist_worker and not xdist_worker_count:
-            if self.results:
-                self.controller.upload_results_to_testrail(self.results)
-                if self.close_on_complete:
-                    self.controller.close_testrail()
+            if self.close_on_complete:
+                self.controller.close_testrail()
 
 
 def pytest_addoption(parser: Parser) -> None:  # noqa D103
