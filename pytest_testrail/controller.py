@@ -82,12 +82,6 @@ class _TestRailController:
         description: str = '',
     ) -> int:
         """Create test run with ids collected from markers."""
-        # prompt enabling include all test cases from test suite when creating test run
-        if self.include_all:
-            self.logger.info(
-                'Option "Include all testcases from test suite for test run" active.',
-            )
-
         data = {
             'suite_id': suite_id,
             'name': self.testrun_name,
