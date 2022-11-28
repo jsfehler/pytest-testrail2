@@ -108,7 +108,7 @@ class PyTestRailPlugin:
         """Add plugin info to header."""
         return self.report_header()
 
-    def set_current_testrun_id(self, config: Config, tr_keys: list[int]) -> None:
+    def set_current_testrun_id(self, config: Config, tr_keys: List[int]) -> None:
         """Get the current testrun's ID or create a new testrun to get an ID."""
         # Guard against creating multiple testruns when using xdist
         file_path = config.invocation_params.dir / 'pytest_testrail.json'
