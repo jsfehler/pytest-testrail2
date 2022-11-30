@@ -18,13 +18,15 @@ class Store:
     def __init__(self, config: Config):
         self.config = config
 
+        self.name = 'store_pytest_testrail2'
+
     def get_all(self) -> Dict[str, Any]:
         """Get a copy of all the data currently in the store.
 
         Returns:
             dict
         """
-        file_path = self.config.invocation_params.dir / 'store_pytest_testrail2.json'
+        file_path = self.config.invocation_params.dir / f'{self.name}.json'
 
         with FileLock(f'{file_path}.lock'):
             if file_path.is_file():
@@ -44,7 +46,7 @@ class Store:
             key: The key to use in the store.
             value: The object to place in the store.
         """
-        file_path = self.config.invocation_params.dir / 'store_pytest_testrail2.json'
+        file_path = self.config.invocation_params.dir / f'{self.name}.json'
 
         stored_value = self.get_all().get(key)
         if not stored_value:
@@ -57,8 +59,8 @@ class Store:
 
     def clear(self):
         """Remove the store files."""
-        file_path = self.config.invocation_params.dir / 'store_pytest_testrail2.json'
-        lock_path = self.config.invocation_params.dir / 'store_pytest_testrail2.json.lock'
+        file_path = self.config.invocation_params.dir / f'{self.name}.json'
+        lock_path = self.config.invocation_params.dir / f'{self.name}.json.lock'
 
         os.remove(file_path)
         os.remove(lock_path)
