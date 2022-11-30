@@ -1,6 +1,7 @@
+import os
 import random
 import uuid
-from typing import Callable
+from typing import Callable, Optional
 from unittest.mock import Mock
 
 import pytest
@@ -8,6 +9,7 @@ import pytest
 from pytest_testrail.controller import _TestRailController
 from pytest_testrail.plugin import PyTestRailPlugin
 from pytest_testrail.result_item import ResultItem
+from pytest_testrail.store import Store
 
 from .mock_response import MockResponse
 
@@ -35,7 +37,7 @@ def tr_controller(api_client):
 
 
 @pytest.fixture
-def tr_plugin(api_client):
+def tr_plugin(api_client, request):
     assign_user_id = 3
     milestone_id = 5
     project_id = 4
@@ -49,6 +51,7 @@ def tr_plugin(api_client):
     )
 
     return PyTestRailPlugin(
+        request.config,
         testrail_controller,
         api_client,
         assign_user_id=assign_user_id,
@@ -135,3 +138,19 @@ def dummy_test_file(pytester):
 @pytest.fixture()
 def test_items(pytester, dummy_test_file):
     return [item for item in pytester.getitems(dummy_test_file) if item.name != 'testrail']
+
+
+def pytest_sessionfinish(session, exitstatus):
+    """Remove the store file after the tests are finished.
+
+    The tests will invoke the plugin class and create a store file.
+    However, the tests do not actually install the plugin.
+    As a result, the store file is not cleared when the test session ends.
+
+    This function is a hack to manually remove the store file.
+    """
+    xdist_worker = os.getenv('PYTEST_XDIST_WORKER')
+    xdist_worker_count: Optional[str] = os.getenv('PYTEST_XDIST_WORKER_COUNT')
+
+    if not xdist_worker and not xdist_worker_count:
+        Store(session.config).clear()

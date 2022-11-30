@@ -201,20 +201,27 @@ class _TestRailController:
 
         self.logger.info('Publishing complete.')
 
-    def close_testrail(self) -> None:
-        """Close the testrun or testplan used by the tests."""
-        if self.testrun_id:
-            response = self.client.close_run(run_id=self.testrun_id).post(
+    def close_testrail(
+        self,
+        run_id: Optional[int] = None,
+        plan_id: Optional[int] = None,
+    ) -> None:
+        """Close a testrun or testplan."""
+        run_id = run_id or self.testrun_id
+        plan_id = plan_id or self.testplan_id
+
+        if run_id:
+            response = self.client.close_run(run_id=run_id).post(
                 json={},
             ).json()
 
             self.client.validate_response(response)
-            self.logger.info(f'Test run with ID={self.testrun_id} was closed')
+            self.logger.info(f'Test run with ID={run_id} was closed')
 
-        elif self.testplan_id:
-            response = self.client.close_plan(plan_id=self.testplan_id).post(
+        elif plan_id:
+            response = self.client.close_plan(plan_id=plan_id).post(
                 json={},
             ).json()
 
             self.client.validate_response(response)
-            self.logger.info(f'Test plan with ID={self.testplan_id} was closed')
+            self.logger.info(f'Test plan with ID={plan_id} was closed')

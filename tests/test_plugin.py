@@ -10,7 +10,7 @@ from pytest_testrail.status import (
     TESTRAIL_TEST_STATUS,
 )
 
-from .mock_response import MockResponse, get_plan_response
+from .mock_response import MockResponse
 
 ASSIGN_USER_ID = 3
 
@@ -75,7 +75,7 @@ def test_pytest_runtest_makereport(
     assert tr_plugin.results == expected_results
 
 
-def test_pytest_sessionfinish(api_client, tr_plugin, new_resultitem):
+def test_pytest_sessionfinish(api_client, tr_plugin, new_resultitem, mocker):
     results = [
         new_resultitem(
             case_id=5678,
@@ -110,6 +110,7 @@ def test_pytest_sessionfinish(api_client, tr_plugin, new_resultitem):
     }
     tr_plugin.controller.client.get_tests().get.return_value = MockResponse(get_tests_return_value)
 
+    mocker.patch('pytest_testrail.store.Store.clear')
     tr_plugin.pytest_sessionfinish(mock.Mock(), 0)
 
     expected_data = {
@@ -148,73 +149,17 @@ def test_pytest_sessionfinish(api_client, tr_plugin, new_resultitem):
     )
 
 
-def test_pytest_sessionfinish_testplan(api_client, tr_plugin, new_resultitem):
-    results = [
-        new_resultitem(
-            test_name='test_foo',
-            case_id=5678,
-            status_id="skipped",
-            duration=0.1,
-            timestamp=999,
-            comment="An error",
-        ),
-        new_resultitem(
-            test_name='test_foo',
-            case_id=1234,
-            status_id="passed",
-            duration=2.6,
-            timestamp=999,
-        ),
-    ]
-    for result in results:
-        tr_plugin.results.append(result)
+def test_sessionfinish_close_on_complete(
+    api_client, tr_controller, new_resultitem, caplog, request
+):
+    """Scenario:
 
-    tr_plugin.testplan_id = 100
-    tr_plugin.testrun_id = 0
-    tr_plugin.controller.testplan_id = 100
-    tr_plugin.controller.testrun_id = 0
-
-    get_tests_return_value = {
-        'tests': [],
-    }
-    tr_plugin.client.get_tests().get.return_value = MockResponse(get_tests_return_value)
-
-    tr_plugin.client.get_plan().get.return_value = get_plan_response
-
-    tr_plugin.pytest_sessionfinish(mock.Mock(), 0)
-    expected_data = {
-        'results': [
-            {
-                'case_id': 1234,
-                'status_id': TESTRAIL_TEST_STATUS["passed"],
-                'version': '1.0.0.0',
-                'elapsed': '3s',
-                'defects': None,
-                'comment': f'# Pytest result: #\n{CUSTOM_COMMENT}\n',
-            },
-            {
-                'case_id': 5678,
-                'status_id': TESTRAIL_TEST_STATUS["blocked"],
-                'version': '1.0.0.0',
-                'elapsed': '1s',
-                'defects': None,
-                'comment': f'# Pytest result: #\n{CUSTOM_COMMENT}\n    An error\n',
-            }
-        ]
-    }
-
-    api_client.add_results_for_cases().post.assert_called()
-
-    api_client.add_results_for_cases().post.assert_any_call(
-        json=expected_data,
-    )
-
-
-def test_close_test_run(api_client, tr_controller, new_resultitem, caplog):
-    tr_controller.testrun_id = 10
-
+    When close_on_complete is set
+    Then the controller's close_testrail() method is called.
+    """
     my_plugin = PyTestRailPlugin(
-        tr_controller,
+        request.config,
+        mock.Mock(),
         api_client,
         ASSIGN_USER_ID,
         PROJECT_ID,
@@ -226,79 +171,12 @@ def test_close_test_run(api_client, tr_controller, new_resultitem, caplog):
         close_on_complete=True,
     )
 
-    results = [
-        new_resultitem(
-            case_id=1234,
-            status_id="failed",
-        ),
-        new_resultitem(
-            case_id=5678,
-            status_id="skipped",
-            comment="An error",
-        ),
-        new_resultitem(
-            case_id=1234,
-            status_id="passed",
-            comment="An error",
-        ),
-    ]
-
-    for result in results:
-        my_plugin.results.append(result)
-
-    get_tests_return_value = {
-        'tests': [],
-    }
-    my_plugin.client.get_tests().get.return_value = MockResponse(get_tests_return_value)
-
     my_plugin.pytest_sessionfinish(mock.Mock(), 0)
 
-    assert caplog.records[-1].msg == 'Test run with ID=10 was closed'
+    my_plugin.controller.close_testrail.assert_called()
 
 
-def test_close_test_plan(api_client, tr_controller, new_resultitem, caplog):
-    tr_controller.testplan_id = 10
-
-    my_plugin = PyTestRailPlugin(
-        tr_controller,
-        api_client,
-        ASSIGN_USER_ID,
-        PROJECT_ID,
-        SUITE_ID,
-        cert_check=False,
-        tr_name=TR_NAME,
-        plan_id=10,
-        version='1.0.0.0',
-        close_on_complete=True,
-    )
-
-    results = [
-        new_resultitem(
-            case_id=5678,
-            status_id="skipped",
-            comment="An error",
-        ),
-        new_resultitem(
-            case_id=1234,
-            status_id="passed",
-        ),
-    ]
-
-    for result in results:
-        my_plugin.results.append(result)
-
-    get_tests_return_value = {
-        'tests': [],
-    }
-    my_plugin.client.get_tests().get.return_value = MockResponse(get_tests_return_value)
-
-    my_plugin.client.get_plan().get.return_value = get_plan_response
-    my_plugin.pytest_sessionfinish(mock.Mock(), 0)
-
-    assert caplog.records[-1].msg == 'Test plan with ID=10 was closed'
-
-
-def test_publish_blocked_disabled(api_client, new_resultitem):
+def test_publish_blocked_disabled(api_client, new_resultitem, request):
     """Scenario:
 
     Given a testcase has 'blocked' status
@@ -316,6 +194,7 @@ def test_publish_blocked_disabled(api_client, new_resultitem):
     )
 
     my_plugin = PyTestRailPlugin(
+        request.config,
         tr_controller,
         api_client,
         assign_user_id=ASSIGN_USER_ID,
@@ -386,8 +265,9 @@ def test_publish_blocked_disabled(api_client, new_resultitem):
     assert my_plugin.client.add_results_for_cases().post.call_args_list[0] == expected_call
 
 
-def test_skip_missing_only_one_test(api_client, tr_controller, test_items):
+def test_skip_missing_only_one_test(api_client, tr_controller, test_items, request):
     my_plugin = PyTestRailPlugin(
+        request.config,
         tr_controller,
         api_client,
         ASSIGN_USER_ID,
@@ -421,8 +301,9 @@ def test_skip_missing_only_one_test(api_client, tr_controller, test_items):
     assert test_items[1].get_closest_marker('skip')
 
 
-def test_skip_missing_correlation_tests(api_client, tr_controller, test_items):
+def test_skip_missing_correlation_tests(api_client, tr_controller, test_items, request):
     my_plugin = PyTestRailPlugin(
+        request.config,
         tr_controller,
         api_client,
         ASSIGN_USER_ID,
@@ -456,8 +337,9 @@ def test_skip_missing_correlation_tests(api_client, tr_controller, test_items):
     assert not test_items[1].get_closest_marker('skip')
 
 
-def test_report_header_run(api_client, tr_controller):
+def test_report_header_run(api_client, tr_controller, request):
     my_plugin = PyTestRailPlugin(
+        request.config,
         tr_controller,
         api_client,
         ASSIGN_USER_ID,
@@ -476,8 +358,9 @@ def test_report_header_run(api_client, tr_controller):
     assert result == 'pytest-testrail: Using existing testrun ID=10'
 
 
-def test_report_header_plan(api_client, tr_controller):
+def test_report_header_plan(api_client, tr_controller, request):
     my_plugin = PyTestRailPlugin(
+        request.config,
         tr_controller,
         api_client,
         ASSIGN_USER_ID,

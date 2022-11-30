@@ -1,12 +1,9 @@
-import json
 import logging
 import os
 import time
 from typing import Generator, List, Optional, Tuple, cast
 
 from _pytest.config.argparsing import OptionGroup, Parser
-
-from filelock import FileLock
 
 import pytest
 from pytest import Config
@@ -17,6 +14,7 @@ from .converters import clean_test_defects, clean_test_ids
 from .logger import get_logger
 from .result_item import ResultItem
 from .results import Results
+from .store import Store
 from .testrail_api_client import _TestRailAPI
 
 
@@ -48,6 +46,7 @@ class PyTestRailPlugin:
 
     def __init__(
         self,
+        config: Config,
         controller: _TestRailController,
         client: _TestRailAPI,
         assign_user_id: int,
@@ -92,6 +91,15 @@ class PyTestRailPlugin:
             'verify': self.cert_check,
         }
 
+        self.store = Store(config)
+        current_store = self.store.get_all()
+
+        if self.testrun_id and not current_store.get('run_id'):
+            self.store.set_value('run_id', self.testrun_id)
+
+        if self.testplan_id and not current_store.get('plan_id'):
+            self.store.set_value('plan_id', self.testplan_id)
+
     def report_header(self) -> str:
         """Get text for pytest's report header."""
         base = 'pytest-testrail:'
@@ -111,28 +119,26 @@ class PyTestRailPlugin:
     def set_current_testrun_id(self, config: Config, tr_keys: List[int]) -> None:
         """Get the current testrun's ID or create a new testrun to get an ID."""
         # Guard against creating multiple testruns when using xdist
-        file_path = config.invocation_params.dir / 'pytest_testrail.json'
-
         run_id: int
 
-        with FileLock(f'{file_path}.lock'):
-            if file_path.is_file():
-                run_id = json.loads(file_path.read_text())['run_id']
+        current_store = self.store.get_all()
+        if current_store:
+            run_id = current_store['run_id']
 
-            else:
-                run_id = self.controller.create_run(
-                    assign_user_id=self.assign_user_id,
-                    project_id=self.project_id,
-                    suite_id=self.suite_id,
-                    tr_keys=tr_keys,
-                    milestone_id=self.milestone_id,
-                    description=self.testrun_description,
-                )
+        else:
+            run_id = self.controller.create_run(
+                assign_user_id=self.assign_user_id,
+                project_id=self.project_id,
+                suite_id=self.suite_id,
+                tr_keys=tr_keys,
+                milestone_id=self.milestone_id,
+                description=self.testrun_description,
+            )
 
-                file_path.write_text(json.dumps({"run_id": run_id}))
+            self.store.set_value('run_id', run_id)
 
-            self.testrun_id = run_id
-            self.controller.testrun_id = run_id
+        self.testrun_id = run_id
+        self.controller.testrun_id = run_id
 
     @pytest.hookimpl(trylast=True)
     def pytest_collection_modifyitems(self, session, config, items) -> None:
@@ -226,8 +232,15 @@ class PyTestRailPlugin:
         # pytest-xdist not installed or master session finished
         if not xdist_worker and not xdist_worker_count:
             if self.close_on_complete:
-                self.controller.close_testrail()
+                # Don't rely on the class, always fetch from the store.
+                current_store = self.store.get_all()
+                self.controller.close_testrail(
+                    run_id=current_store.get('run_id'),
+                    plan_id=current_store.get('plan_id'),
+                )
 
+            # Remove store files when tests are complete.
+            self.store.clear()
 
 def pytest_addoption(parser: Parser) -> None:  # noqa D103
     group: OptionGroup = parser.getgroup('testrail')
@@ -572,6 +585,7 @@ def pytest_configure(config: Config) -> None:  # noqa D103
 
         config.pluginmanager.register(
             PyTestRailPlugin(
+                config=config,
                 controller=testrail_controller,
                 client=client,
                 assign_user_id=assign_user_id,
