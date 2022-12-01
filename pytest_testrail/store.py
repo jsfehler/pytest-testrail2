@@ -20,17 +20,21 @@ class Store:
 
         self.name = 'store_pytest_testrail2'
 
+        self.file_path = self.config.invocation_params.dir / f'{self.name}.json'
+        self.lock_path = self.config.invocation_params.dir / f'{self.name}.json.lock'
+
+        # The lock prevents multiple test nodes from read/writing simultaneously
+        self.lock = FileLock(f'{self.lock_path}')
+
     def get_all(self) -> Dict[str, Any]:
         """Get a copy of all the data currently in the store.
 
         Returns:
             dict
         """
-        file_path = self.config.invocation_params.dir / f'{self.name}.json'
-
-        with FileLock(f'{file_path}.lock'):
-            if file_path.is_file():
-                data: Dict[str, Any] = json.loads(file_path.read_text())
+        with self.lock:
+            if self.file_path.is_file():
+                data: Dict[str, Any] = json.loads(self.file_path.read_text())
                 return data
 
         return {}
@@ -38,29 +42,26 @@ class Store:
     def set_value(self, key: str, value: Any) -> None:
         """Set a variable into the store.
 
-        Variables can only be placed into the store once. They should not be
-        overwritten.
+        Variables can only be placed into the store once.
 
         Arguments:
             config: pytest.Config instance.
             key: The key to use in the store.
             value: The object to place in the store.
-        """
-        file_path = self.config.invocation_params.dir / f'{self.name}.json'
 
+        Raises:
+            ValueError: If a value would be overwritten.
+        """
         stored_value = self.get_all().get(key)
         if not stored_value:
-            with FileLock(f'{file_path}.lock'):
+            with self.lock:
                 data = json.dumps({key: value})
-                file_path.write_text(data)
+                self.file_path.write_text(data)
 
         else:
             raise ValueError('Cannot set objects into a store multiple times.')
 
     def clear(self):
         """Remove the store files."""
-        file_path = self.config.invocation_params.dir / f'{self.name}.json'
-        lock_path = self.config.invocation_params.dir / f'{self.name}.json.lock'
-
-        os.remove(file_path)
-        os.remove(lock_path)
+        os.remove(self.file_path)
+        os.remove(self.lock_path)
