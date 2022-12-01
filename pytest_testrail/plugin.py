@@ -121,21 +121,22 @@ class PyTestRailPlugin:
         # Guard against creating multiple testruns when using xdist
         run_id: int
 
-        current_store = self.store.get_all()
-        if current_store:
-            run_id = current_store['run_id']
+        with self.store.lock:
+            current_store = self.store.get_all()
+            if current_store:
+                run_id = current_store['run_id']
 
-        else:
-            run_id = self.controller.create_run(
-                assign_user_id=self.assign_user_id,
-                project_id=self.project_id,
-                suite_id=self.suite_id,
-                tr_keys=tr_keys,
-                milestone_id=self.milestone_id,
-                description=self.testrun_description,
-            )
+            else:
+                run_id = self.controller.create_run(
+                    assign_user_id=self.assign_user_id,
+                    project_id=self.project_id,
+                    suite_id=self.suite_id,
+                    tr_keys=tr_keys,
+                    milestone_id=self.milestone_id,
+                    description=self.testrun_description,
+                )
 
-            self.store.set_value('run_id', run_id)
+                self.store.set_value('run_id', run_id)
 
         self.testrun_id = run_id
         self.controller.testrun_id = run_id
