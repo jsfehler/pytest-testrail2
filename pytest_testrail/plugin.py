@@ -286,6 +286,7 @@ def pytest_addoption(parser: Parser) -> None:
         help='Activate the TestRail plugin.',
     )
 
+    # Setup
     add(
         '--tr-url',
         help_msg='Web address used to access a TestRail instance.',
@@ -320,6 +321,45 @@ def pytest_addoption(parser: Parser) -> None:
     )
 
     add(
+        '--tr-no-ssl-cert-check',
+        help_msg='Do not check for valid SSL certificate on TestRail host.',
+        ini_type='bool',
+        action='store_false',
+        default=None,
+    )
+
+    # Testrun
+    add(
+        '--tr-run-id',
+        help_msg=(
+            'ID of an existing testrun in TestRail.'
+            'If given, "--tr-testrun-name" will be ignored.'
+        ),
+        opt_type=str,
+        ini_type='string',
+        action='store',
+        required=False,
+        default=0,
+    )
+
+    add(
+        '--tr-testrun-name',
+        help_msg='Name used when creating a new testrun in TestRail.',
+        opt_type=str,
+        ini_type='string',
+        action='store',
+    )
+
+    add(
+        '--tr-testrun-description',
+        help_msg='Description used when creating a new testrun in TestRail.',
+        opt_type=str,
+        ini_type='string',
+        action='store',
+        default=None,
+    )
+
+    add(
         '--tr-testrun-assignedto-id',
         help_msg='ID of the user assigned to the testrun.',
         opt_type=int,
@@ -351,35 +391,26 @@ def pytest_addoption(parser: Parser) -> None:
     )
 
     add(
-        '--tr-testrun-name',
-        help_msg='Name used when creating a new testrun in TestRail.',
-        opt_type=str,
-        ini_type='string',
-        action='store',
-    )
-
-    add(
-        '--tr-testrun-description',
-        help_msg='Description used when creating a new testrun in TestRail.',
-        opt_type=str,
+        '--tr-milestone-id',
+        help_msg='ID of milestone used in testrun creation.',
+        opt_type=int,
         ini_type='string',
         action='store',
         default=None,
+        required=False,
     )
 
     add(
-        '--tr-run-id',
+        '--tr-skip-missing',
         help_msg=(
-            'ID of an existing testrun in TestRail.'
-            'If given, "--tr-testrun-name" will be ignored.'
+            'Skip pytest test functions with marks that are not present in a specified testrun.'
         ),
-        opt_type=str,
-        ini_type='string',
-        action='store',
+        ini_type='bool',
+        action='store_true',
         required=False,
-        default=0,
     )
 
+    # Testplan
     add(
         '--tr-plan-id',
         help_msg=(
@@ -392,16 +423,7 @@ def pytest_addoption(parser: Parser) -> None:
         required=False,
     )
 
-    add(
-        '--tr-milestone-id',
-        help_msg='ID of milestone used in testrun creation.',
-        opt_type=int,
-        ini_type='string',
-        action='store',
-        default=None,
-        required=False,
-    )
-
+    # Publishing
     add(
         '--tr-version',
         help_msg='Specify a version in testcase results.',
@@ -410,14 +432,6 @@ def pytest_addoption(parser: Parser) -> None:
         action='store',
         default='',
         required=False,
-    )
-
-    add(
-        '--tr-no-ssl-cert-check',
-        help_msg='Do not check for valid SSL certificate on TestRail host.',
-        ini_type='bool',
-        action='store_false',
-        default=None,
     )
 
     add(
@@ -434,16 +448,6 @@ def pytest_addoption(parser: Parser) -> None:
         help_msg='Do not publish results of "blocked" testcases (in TestRail).',
         ini_type='bool',
         action='store_false',
-        required=False,
-    )
-
-    add(
-        '--tr-skip-missing',
-        help_msg=(
-            'Skip pytest test functions with marks that are not present in a specified testrun.'
-        ),
-        ini_type='bool',
-        action='store_true',
         required=False,
     )
 
