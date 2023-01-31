@@ -131,22 +131,12 @@ The `--testrail` command-line flag must be present to upload results:
 
   pytest --testrail
 
-Advanced Usage
-==============
 
-Testruns
---------
+Options
+=======
 
-Existing testruns can be specified with the `--tr-run-id` flag.
-
-If not specified a new testrun will be created.
-
-To specify the name of a new testrun, use the `--tr-testrun-name` flag.
-
-To specify the description of a new testrun, use the `--tr-testrun-description`.
-
-All Options
-===========
+Setup
+-----
 
 - ``--testrail``
   Activate the TestRail plugin.
@@ -163,47 +153,58 @@ All Options
 - ``--tr-timeout``
   Timeout for connecting to a TestRail server.
 
-- ``--tr-testrun-assignedto-id``
-  ID of the user assigned to the testrun.
+- ``--tr-no-ssl-cert-check``
+  Do not check for valid SSL certificate on TestRail host.
 
-- ``--tr-testrun-project-id``
-  ID of the project the testrun is in.
-
-- ``--tr-testrun-suite-id``
-  ID of the suite containing the testcases.
-
-- ``--tr-testrun-suite-include-all``
-  Include all test cases in the specified testsuite when creating a new testrun.
-
-- ``--tr-testrun-name``
-  Name used when creating a new testrun in TestRail.
-
-- ``--tr-testrun-description``
-  Description used when creating a new testrun in TestRail.
+Testrun
+-------
 
 - ``--tr-run-id``
-  ID of an existing testrun in TestRail. If given, "--tr-testrun-name" will be ignored.
+  ID of an existing testrun in TestRail.
+  If specified, the testrun matching the ID will be used instead of creating a new testrun.
+  If given, ``--tr-testrun-name`` will be ignored.
 
-- ``--tr-plan-id``
-  ID of an existing testplan to use. If given, "--tr-testrun-name" will be ignored.
+- ``--tr-testrun-name``
+  Name used for a new testrun in TestRail.
+
+- ``--tr-testrun-description``
+  Description used for a new testrun in TestRail.
+
+- ``--tr-testrun-assignedto-id``
+  ID of the user to be assigned to the testrun.
+
+- ``--tr-testrun-project-id``
+  ID of the project the testrun will be created in.
+
+- ``--tr-testrun-suite-id``
+  ID of the suite the testrun will be created in.
+
+- ``--tr-testrun-suite-include-all``
+  Include all test cases in the specified testsuite for a new testrun.
 
 - ``--tr-milestone-id``
   ID of milestone used in testrun creation.
 
+- ``--tr-skip-missing``
+  Skip pytest test functions with marks that are not present in a specified testrun.
+
+Testplan
+--------
+
+- ``--tr-plan-id``
+  ID of an existing testplan to use. If given, ``--tr-testrun-name`` will be ignored.
+
+Publishing
+----------
+
 - ``--tr-version``
   Specify a version in testcase results.
-
-- ``--tr-no-ssl-cert-check``
-  Do not check for valid SSL certificate on TestRail host.
 
 - ``--tr-close-on-complete``
   On pytest completion, close the testrun.
 
 - ``--tr-dont-publish-blocked``
   Do not publish results of "blocked" testcases (in TestRail).
-
-- ``--tr-skip-missing``
-  Skip pytest test functions with marks that are not present in a specified testrun.
 
 - ``--tr-custom-comment``
   Custom text appended to comment for all testcase results.
