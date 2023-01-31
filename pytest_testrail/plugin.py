@@ -250,17 +250,22 @@ def pytest_addoption(parser: Parser) -> None:
 
     def add(
         option_name: str,
-        dest: str,
         help_msg: str = '',
         default=None,
         opt_type=None,
         ini_type: str = '',
         **kwargs,
     ) -> None:
-        """Add command-line and ini handler for an option."""
+        """Add command-line and ini handler for an option.
+
+        ini names are based on the option_name value, with '--' removed and
+        dashes replaced with underscores.
+        """
         # Handle different store types for options
         if opt_type:
             kwargs['type'] = opt_type
+
+        ini_name: str = option_name.split('--')[1].replace('-', '_')
 
         group.addoption(
             option_name,
@@ -269,7 +274,7 @@ def pytest_addoption(parser: Parser) -> None:
             **kwargs,
         )
         parser.addini(
-            dest,
+            ini_name,
             type=ini_type,
             default=default,
             help=help_msg,
@@ -283,7 +288,6 @@ def pytest_addoption(parser: Parser) -> None:
 
     add(
         '--tr-url',
-        'tr_url',
         help_msg='Web address used to access a TestRail instance.',
         opt_type=str,
         ini_type='string',
@@ -292,7 +296,6 @@ def pytest_addoption(parser: Parser) -> None:
 
     add(
         '--tr-email',
-        'tr_email',
         help_msg='E-mail address for an account on the TestRail instance.',
         opt_type=str,
         ini_type='string',
@@ -301,7 +304,6 @@ def pytest_addoption(parser: Parser) -> None:
 
     add(
         '--tr-password',
-        'tr_password',
         help_msg='Password for an account on the TestRail instance.',
         opt_type=str,
         ini_type='string',
@@ -310,7 +312,6 @@ def pytest_addoption(parser: Parser) -> None:
 
     add(
         '--tr-timeout',
-        'tr_timeout',
         help_msg='Timeout for connecting to a TestRail server.',
         opt_type=int,
         ini_type='string',
@@ -320,7 +321,6 @@ def pytest_addoption(parser: Parser) -> None:
 
     add(
         '--tr-testrun-assignedto-id',
-        'tr_testrun_assignedto_id',
         help_msg='ID of the user assigned to the testrun.',
         opt_type=int,
         ini_type='string',
@@ -329,7 +329,6 @@ def pytest_addoption(parser: Parser) -> None:
 
     add(
         '--tr-testrun-project-id',
-        'tr_testrun_project_id',
         help_msg='ID of the project the testrun is in.',
         opt_type=int,
         ini_type='string',
@@ -338,7 +337,6 @@ def pytest_addoption(parser: Parser) -> None:
 
     add(
         '--tr-testrun-suite-id',
-        'tr_testrun_suite_id',
         help_msg='ID of the suite containing the testcases.',
         opt_type=int,
         ini_type='string',
@@ -347,7 +345,6 @@ def pytest_addoption(parser: Parser) -> None:
 
     add(
         '--tr-testrun-suite-include-all',
-        'tr_testrun_suite_include_all',
         help_msg='Include all test cases in the specified test suite when creating a new testrun.',
         ini_type='string',
         action='store_true',
@@ -355,7 +352,6 @@ def pytest_addoption(parser: Parser) -> None:
 
     add(
         '--tr-testrun-name',
-        'tr_testrun_name',
         help_msg='Name used when creating a new testrun in TestRail.',
         opt_type=str,
         ini_type='string',
@@ -364,7 +360,6 @@ def pytest_addoption(parser: Parser) -> None:
 
     add(
         '--tr-testrun-description',
-        'tr_testrun_description',
         help_msg='Description used when creating a new testrun in TestRail.',
         opt_type=str,
         ini_type='string',
@@ -374,7 +369,6 @@ def pytest_addoption(parser: Parser) -> None:
 
     add(
         '--tr-run-id',
-        'tr_run_id',
         help_msg=(
             'ID of an existing testrun in TestRail.'
             'If given, "--tr-testrun-name" will be ignored.'
@@ -388,7 +382,6 @@ def pytest_addoption(parser: Parser) -> None:
 
     add(
         '--tr-plan-id',
-        'tr_plan_id',
         help_msg=(
             'ID of an existing testplan to use.'
             'If given, "--tr-testrun-name" will be ignored.'
@@ -401,7 +394,6 @@ def pytest_addoption(parser: Parser) -> None:
 
     add(
         '--tr-milestone-id',
-        'tr_milestone_id',
         help_msg='ID of milestone used in testrun creation.',
         opt_type=int,
         ini_type='string',
@@ -412,7 +404,6 @@ def pytest_addoption(parser: Parser) -> None:
 
     add(
         '--tr-version',
-        'tr_version',
         help_msg='Specify a version in testcase results.',
         opt_type=str,
         ini_type='string',
@@ -423,7 +414,6 @@ def pytest_addoption(parser: Parser) -> None:
 
     add(
         '--tr-no-ssl-cert-check',
-        'tr_no_ssl_cert_check',
         help_msg='Do not check for valid SSL certificate on TestRail host.',
         ini_type='bool',
         action='store_false',
@@ -432,7 +422,6 @@ def pytest_addoption(parser: Parser) -> None:
 
     add(
         '--tr-close-on-complete',
-        'tr_close_on_complete',
         help_msg='On pytest completion, close the testrun.',
         ini_type='bool',
         action='store_true',
@@ -442,7 +431,6 @@ def pytest_addoption(parser: Parser) -> None:
 
     add(
         '--tr-dont-publish-blocked',
-        'tr_dont_publish_blocked',
         help_msg='Do not publish results of "blocked" testcases (in TestRail).',
         ini_type='bool',
         action='store_false',
@@ -451,7 +439,6 @@ def pytest_addoption(parser: Parser) -> None:
 
     add(
         '--tr-skip-missing',
-        'tr_skip_missing',
         help_msg=(
             'Skip pytest test functions with marks that are not present in a specified testrun.'
         ),
@@ -462,7 +449,6 @@ def pytest_addoption(parser: Parser) -> None:
 
     add(
         '--tr-custom-comment',
-        'tr_custom_comment',
         help_msg='Custom text appended to comment for all testcase results.',
         opt_type=str,
         ini_type='string',
