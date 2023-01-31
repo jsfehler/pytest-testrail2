@@ -243,7 +243,9 @@ class PyTestRailPlugin:
             # Remove store files when tests are complete.
             self.store.clear()
 
-def pytest_addoption(parser: Parser) -> None:  # noqa D103
+
+def pytest_addoption(parser: Parser) -> None:
+    """Add plugin options."""
     group: OptionGroup = parser.getgroup('testrail')
 
     def add(
@@ -255,7 +257,7 @@ def pytest_addoption(parser: Parser) -> None:  # noqa D103
         ini_type: str = '',
         **kwargs,
     ) -> None:
-
+        """Add command-line and ini handler for an option."""
         # Handle different store types for options
         if opt_type:
             kwargs['type'] = opt_type
