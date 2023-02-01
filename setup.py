@@ -10,7 +10,7 @@ setup(
     name='pytest-testrail2',
     description='A pytest plugin to upload results to TestRail.',
     long_description=read_file('README.rst'),
-    version='1.0.0',
+    version='1.0.1',
     author='Joshua Fehler',
     url='http://github.com/jsfehler/pytest-testrail2/',
     packages=[
