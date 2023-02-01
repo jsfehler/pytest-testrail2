@@ -8,11 +8,20 @@ from pytest import Config
 
 
 class Store:
-    """Store JSON data in a file. Keys can only be written to once.
+    """Handle the storing of JSON data in a file.
 
-    Store and associated JSON file exist to handle pytest-xdist's multiple
+    Keys can only be written to once. If a key exists in the store file and
+    an attempt is made to set it then a ValueError will be raised.
+
+    Store() and associated JSON file exist to handle pytest-xdist's multiple
     sessions. Multiple sessions cause multiple instances of the plugin to be
     created. The only way to store state is to write to an external file.
+
+    Thus, the first xdist node to write to the store determines the value for
+    the rest.
+
+    Arguments:
+        config: pytest.Config instance.
     """
 
     def __init__(self, config: Config):
@@ -45,7 +54,6 @@ class Store:
         Variables can only be placed into the store once.
 
         Arguments:
-            config: pytest.Config instance.
             key: The key to use in the store.
             value: The object to place in the store.
 
@@ -61,7 +69,16 @@ class Store:
         else:
             raise ValueError('Cannot set objects into a store multiple times.')
 
-    def clear(self):
-        """Remove the store files."""
-        os.remove(self.file_path)
+    def clear(self) -> None:
+        """Remove the store and lock files.
+
+        The Store() class does not guarantee the store file is created.
+        If the store file does not exist and Store().clear() is called,
+        it will be gracefully ignored.
+        """
+        try:
+            os.remove(self.file_path)
+        except OSError:
+            pass
+
         os.remove(self.lock_path)
