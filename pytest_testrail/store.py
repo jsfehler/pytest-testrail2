@@ -81,4 +81,7 @@ class Store:
         except OSError:
             pass
 
-        os.remove(self.lock_path)
+        try:
+            os.remove(self.lock_path)
+        except OSError:
+            pass
