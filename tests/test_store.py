@@ -27,3 +27,5 @@ def test_store_no_file(request):
     store = Store(request.config)
 
     store.clear()
+    # Clear twice to ensure the files don't exist.
+    store.clear()
