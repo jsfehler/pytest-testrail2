@@ -479,15 +479,21 @@ def pytest_configure(config: Config) -> None:  # noqa D103
     if use_testrail:
         config_manager = ConfigManager(config)
 
-        timeout = int(cast(int, config_manager.get('--tr-timeout', 'tr_timeout')))
+        tr_url = cast(str, config_manager.get('--tr-url', 'tr_url'))
+        tr_email = cast(str, config_manager.get('--tr-email', 'tr_email'))
+        tr_password = cast(str, config_manager.get('--tr-password', 'tr_password'))
+        tr_timeout = int(cast(int, config_manager.get('--tr-timeout', 'tr_timeout')))
+
+        if not tr_url:
+            pytest.exit('A TestRail URL is required.', returncode=4)
+
+        if not tr_email or not tr_password:
+            pytest.exit('TestRail credentials are required.', returncode=4)
 
         client = _TestRailAPI(
-            base_url=cast(str, config_manager.get('--tr-url', 'tr_url')),
-            auth=(
-                cast(str, config_manager.get('--tr-email', 'tr_email')),
-                cast(str, config_manager.get('--tr-password', 'tr_password')),
-            ),
-            timeout=timeout,
+            base_url=tr_url,
+            auth=(tr_email, tr_password),
+            timeout=tr_timeout,
         )
 
         assign_user_id = config_manager.get(

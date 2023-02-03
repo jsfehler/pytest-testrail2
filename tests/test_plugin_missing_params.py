@@ -2,7 +2,7 @@ import pytest
 
 
 @pytest.fixture()
-def dummy_test_file2(pytester):
+def test_plugin_missing_url_dummy_file(pytester):
     # Register marks
     conftest_source = """
     from unittest.mock import Mock
@@ -40,41 +40,32 @@ def dummy_test_file2(pytester):
 
         @pytest.mark.case_id('C1234')
         def test_func_1(request):
-            c = request.config.pluginmanager
-            x = c.getplugin('pytest-testrail-instance')
-
-            assert 1985 == x.testrun_id
-
-        @pytest.mark.case_id('C8765')
-        @pytest.mark.defect_ids('PF-418', 'PF-517')
-        def test_func_2(request):
-            c = request.config.pluginmanager
-            x = c.getplugin('pytest-testrail-instance')
-
-            assert 1985 == x.testrun_id
-
-        @pytest.mark.case_id('C1951')
-        def test_func_3(request):
-            c = request.config.pluginmanager
-            x = c.getplugin('pytest-testrail-instance')
-
-            assert 1985 == x.testrun_id
-
-        @pytest.mark.case_id('C2020')
-        @pytest.mark.defect_ids('PF-418', 'PF-517')
-        def test_func_4(request):
-            c = request.config.pluginmanager
-            x = c.getplugin('pytest-testrail-instance')
-
-            assert 1985 == x.testrun_id
+            assert True
 
     """
     pytester.makepyfile(file_data)
     return file_data
 
 
-def test_xdist_create_new_run(pytester, dummy_test_file2, caplog):
-    """Scenario: pytest-xdist is installed
+def test_plugin_missing_url(pytester, test_plugin_missing_url_dummy_file):
+    """Scenario: missing TestRail URL
+
+    When pytest is invoked with xdist
+    And a testrun_id has not been specified
+    Then one new testrun_id is generated
+    And the new testrun_id is shared by all xdist workers.
+    """
+    result = pytester.runpytest(
+        '--testrail',
+        '--tr-email=dummy',
+        '--tr-password=dummy',
+    )
+
+    assert result.errlines == ['Exit: A TestRail URL is required.']
+
+
+def test_plugin_missing_auth(pytester, test_plugin_missing_url_dummy_file):
+    """Scenario: missing TestRail credentials
 
     When pytest is invoked with xdist
     And a testrun_id has not been specified
@@ -84,11 +75,6 @@ def test_xdist_create_new_run(pytester, dummy_test_file2, caplog):
     result = pytester.runpytest(
         '--testrail',
         '--tr-url=dummy',
-        '--tr-email=dummy',
-        '--tr-password=dummy',
-        '--tr-close-on-complete',
-        '-n 2',
-        '-vvvv',
     )
 
-    result.assert_outcomes(passed=4, skipped=0, failed=0, errors=0)
+    assert result.errlines == ['Exit: TestRail credentials are required.']
