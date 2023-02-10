@@ -3,6 +3,20 @@ Changelog
 =========
 All notable changes to this project will be documented in this file.
 
+[1.1.0] - 2023-02-10
+=====================
+
+Changed
+-------
+
+- The tr-timeout option type has been changed from int to float.
+
+Fixed
+-----
+
+- The tr-timeout option is no longer ignored.
+
+
 [1.0.2] - 2023-02-03
 =====================
 
