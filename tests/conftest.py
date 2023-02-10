@@ -21,6 +21,7 @@ def api_client():
     """Get a mock for the TestRailAPI client."""
     client = Mock()
 
+    client.request_kwargs = {}
     client.get_run().get.return_value = MockResponse({'is_completed': False})
     client.get_plan().get.return_value = MockResponse({'is_completed': False})
     return client
@@ -57,7 +58,6 @@ def tr_plugin(api_client, request):
         assign_user_id=assign_user_id,
         project_id=project_id,
         suite_id=suite_id,
-        cert_check=False,
         tr_name=None,
         tr_description='This is a test description',
         version='1.0.0.0',

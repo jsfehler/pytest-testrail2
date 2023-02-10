@@ -31,7 +31,8 @@ def dummy_test_file2(pytester):
         pytest_testrail.controller._TestRailController.create_run = m
         pytest_testrail.controller._TestRailController.create_run.return_value = next(foo)
 
-        pytest_testrail.plugin._TestRailAPI = Mock()
+        mock_client = Mock()
+        pytest_testrail.plugin._TestRailAPI = mock_client
     """
     pytester.makeconftest(conftest_source)
 
