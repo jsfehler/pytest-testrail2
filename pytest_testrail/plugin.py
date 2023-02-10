@@ -52,7 +52,6 @@ class PyTestRailPlugin:
         assign_user_id: int,
         project_id: int,
         suite_id: int,
-        cert_check: bool,
         tr_name: Optional[str] = None,
         tr_description: str = '',
         run_id: int = 0,
@@ -67,7 +66,6 @@ class PyTestRailPlugin:
         self.assign_user_id = assign_user_id
         self.project_id = project_id
         self.suite_id = suite_id
-        self.cert_check = cert_check
         self.testrun_description = tr_description
         self.testrun_id = run_id
         self.testplan_id = plan_id
@@ -86,10 +84,6 @@ class PyTestRailPlugin:
 
         self.case_id_mark = 'case_id'
         self.defect_ids_mark = 'defect_ids'
-
-        self.client.request_kwargs = {
-            'verify': self.cert_check,
-        }
 
         self.store = Store(config)
         current_store = self.store.get_all()
@@ -314,10 +308,10 @@ def pytest_addoption(parser: Parser) -> None:
     add(
         '--tr-timeout',
         help_msg='Timeout for connecting to a TestRail server.',
-        opt_type=int,
+        opt_type=float,
         ini_type='string',
         action='store',
-        default=30,
+        default=30.0,
     )
 
     add(
@@ -483,6 +477,11 @@ def pytest_configure(config: Config) -> None:  # noqa D103
         tr_email = cast(str, config_manager.get('--tr-email', 'tr_email'))
         tr_password = cast(str, config_manager.get('--tr-password', 'tr_password'))
         tr_timeout = int(cast(int, config_manager.get('--tr-timeout', 'tr_timeout')))
+        cert_check = config_manager.get(
+            '--tr-no-ssl-cert-check',
+            'tr_no_ssl_cert_check',
+        )
+        cert_check = cast(bool, cert_check)
 
         if not tr_url:
             pytest.exit('A TestRail URL is required.', returncode=4)
@@ -494,6 +493,7 @@ def pytest_configure(config: Config) -> None:  # noqa D103
             base_url=tr_url,
             auth=(tr_email, tr_password),
             timeout=tr_timeout,
+            verify=cert_check,
         )
 
         assign_user_id = config_manager.get(
@@ -519,12 +519,6 @@ def pytest_configure(config: Config) -> None:  # noqa D103
             'tr_testrun_suite_include_all',
         )
         include_all = cast(bool, include_all)
-
-        cert_check = config_manager.get(
-            '--tr-no-ssl-cert-check',
-            'tr_no_ssl_cert_check',
-        )
-        cert_check = cast(bool, cert_check)
 
         tr_name = config_manager.get(
             '--tr-testrun-name',
@@ -590,7 +584,6 @@ def pytest_configure(config: Config) -> None:  # noqa D103
                 assign_user_id=assign_user_id,
                 project_id=project_id,
                 suite_id=suite_id,
-                cert_check=cert_check,
                 tr_name=tr_name,
                 tr_description=tr_description,
                 run_id=run_id,

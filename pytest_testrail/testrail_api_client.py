@@ -21,11 +21,13 @@ class _TestRailAPI(inori.Client):
         self,
         base_url: str,
         auth=None,
-        timeout: Optional[Union[float, Tuple[float, float]]] = 30,
+        timeout: Optional[Union[float, Tuple[float, float]]] = 30.0,
+        verify: Optional[bool] = True,
     ):
         super().__init__(f'{base_url}/index.php?/api/v2/', auth)
 
-        self.timeout = timeout
+        self.request_kwargs['timeout'] = timeout
+        self.request_kwargs['verify'] = verify
 
         self.headers['Content-Type'] = 'application/json'
 
